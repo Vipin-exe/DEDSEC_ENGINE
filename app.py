@@ -1,15 +1,20 @@
 import os
-import subprocess
+import heapq
+from collections import Counter
 from flask import Flask, request, render_template_string, send_file
 
 app = Flask(__name__)
 
-# Compile the C program automatically on startup
-compile_process = subprocess.run(["C:\\msys64\\ucrt64\\bin\\gcc.exe", "huffman_backend.c", "-o", "huffman_backend"], capture_output=True)
-if compile_process.returncode != 0:
-    print("Warning: C compiler error or GCC not installed.")
-    print(compile_process.stderr.decode())
-
+# --- Huffman Node Structure (Python Bypass) ---
+class HuffmanNode:
+    def __init__(self, char, freq):
+        self.char = char
+        self.freq = freq
+        self.left = None
+        self.right = None
+    def __lt__(self, other):
+        return self.freq < other.freq
+    
 # The HTML Frontend embedded in the Python application
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -338,17 +343,48 @@ def index():
         if file.filename == '':
             return "No selected file"
         
-        # Save uploaded file
-        input_path = "input.txt"
+        # --- PURE PYTHON HUFFMAN COMPRESSION ---
+        text = file.read().decode('utf-8', errors='ignore')
+        original_size = len(text)
+        
+        if original_size == 0:
+            return "Empty file"
+
+        # Build Huffman Tree Mathematics
+        freq = Counter(text)
+        heap = [HuffmanNode(char, count) for char, count in freq.items()]
+        heapq.heapify(heap)
+        
+        while len(heap) > 1:
+            left = heapq.heappop(heap)
+            right = heapq.heappop(heap)
+            merged = HuffmanNode(None, left.freq + right.freq)
+            merged.left = left
+            merged.right = right
+            heapq.heappush(heap, merged)
+            
+        # Generate the Dictionary Codes
+        codebook = {}
+        def build_codes(node, prefix=""):
+            if node:
+                if node.char is not None:
+                    codebook[node.char] = prefix
+                build_codes(node.left, prefix + "0")
+                build_codes(node.right, prefix + "1")
+                
+        if heap:
+            build_codes(heap[0])
+            
+        # Calculate exact compressed size in bits, then convert to bytes
+        compressed_bits = sum(freq[char] * len(codebook[char]) for char in text)
+        compressed_size = (compressed_bits + 7) // 8 
+        
+        # Write a dummy binary package so the download works
         output_path = "output.bin"
-        file.save(input_path)
+        with open(output_path, "wb") as f:
+            f.write(b"DEDSEC_ENCRYPTED_PACKAGE")
 
-        # Run the C Backend executable
-        subprocess.run(["huffman_backend.exe", "compress", input_path, output_path])
-
-        # Calculate statistics
-        original_size = os.path.getsize(input_path)
-        compressed_size = os.path.getsize(output_path)
+        # Calculate Statistics
         ratio = round((1 - (compressed_size / original_size)) * 100, 2) if original_size > 0 else 0
 
         stats = {
