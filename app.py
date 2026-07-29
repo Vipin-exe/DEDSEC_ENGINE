@@ -18,14 +18,14 @@ HTML_TEMPLATE = """
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             background-image: 
-                linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.3)), 
+                linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.4)), 
                 url('/static/bg.jpg'); 
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
             background-repeat: no-repeat;
             color: #e2e8f0; display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; overflow: hidden; padding: 20px;
+            min-height: 100vh; padding: 20px;
             position: relative;
             z-index: 1;
         }
@@ -42,209 +42,215 @@ HTML_TEMPLATE = """
             background: rgba(10, 10, 10, 0.85);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            padding: 45px 40px;
+            padding: 35px 30px;
             border-radius: 0px; 
-            border: 1px solid rgba(255, 0, 85, 0.2); 
+            border: 1px solid rgba(255, 0, 85, 0.3); 
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
             width: 100%; 
-            max-width: 550px;
+            max-width: 600px;
             text-align: center;
             animation: fadeIn 0.6s ease-out forwards;
         }
         h2 { 
             color: #ff0055; 
-            font-size: clamp(24px, 5vw, 28px); 
-            margin-bottom: 6px; 
+            font-size: clamp(22px, 4vw, 26px); 
+            margin-bottom: 4px; 
             letter-spacing: 2px;
             text-transform: uppercase;
             text-shadow: 0 0 10px rgba(255, 0, 85, 0.4);
         }
         p.subtitle { 
             color: #94a3b8; 
-            font-size: clamp(13px, 3vw, 14px); 
-            margin-bottom: 30px; 
+            font-size: clamp(12px, 3vw, 13px); 
+            margin-bottom: 25px; 
             letter-spacing: 1px;
             text-transform: uppercase;
         }
-        .upload-area {
-            border: 2px dashed #ff0055; 
-            padding: 35px 20px;
+        .engine-panel {
             background: rgba(0, 0, 0, 0.6);
-            margin-bottom: 25px;
-            transition: all 0.3s ease;
-            position: relative;
+            border: 1px dashed #ff0055;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: left;
         }
-        .upload-area:hover, .upload-area.dragover {
-            border-color: #ffffff;
-            background: rgba(255, 0, 85, 0.1);
+        .engine-panel h3 {
+            color: #fff;
+            font-size: 14px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255, 0, 85, 0.2);
+            padding-bottom: 6px;
         }
-        input[type="file"] { display: none; }
+        input[type="file"] { 
+            display: none; 
+        }
         .upload-label {
             background: rgba(0, 0, 0, 0.5);
             color: #ff0055;
             border: 1px solid #ff0055;
-            padding: 14px 28px;
+            padding: 10px 15px;
             cursor: pointer;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
-            width: 100%; max-width: 250px;
+            width: 100%;
             text-transform: uppercase;
             letter-spacing: 1px;
+            font-size: 13px;
+            margin-bottom: 10px;
         }
         .upload-label:hover {
             background: #ff0055;
             color: white;
             box-shadow: 0 0 15px rgba(255, 0, 85, 0.5);
-            transform: translateY(-2px);
         }
         .filename-display { 
-            margin-top: 15px; 
-            font-size: 14px; 
+            font-size: 13px; 
             color: #cbd5e1; 
             font-family: monospace;
-            min-height: 20px;
-            word-wrap: break-word;
-            padding: 0 10px;
+            margin-bottom: 12px;
+            word-break: break-all;
         }
         button[type="submit"] {
             background: linear-gradient(135deg, #ff0055, #b3003b); 
             color: white;
             border: none;
-            padding: 16px 30px;
-            font-size: 16px;
+            padding: 12px 20px;
+            font-size: 14px;
             cursor: pointer;
             width: 100%;
             font-weight: 700;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             text-transform: uppercase;
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(255, 0, 85, 0.3);
         }
         button[type="submit"]:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255, 0, 85, 0.5);
-            animation: pulseGlow 1.5s infinite;
-        }
-        button[type="submit"]:disabled {
-            background: #333333;
-            color: #666666;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-            animation: none;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(255, 0, 85, 0.5);
         }
         .stats {
-            margin-top: 30px;
+            margin-top: 15px;
             background: rgba(0, 0, 0, 0.8);
-            padding: 25px;
-            border-left: 4px solid #ff0055; 
+            padding: 15px;
+            border-left: 3px solid #ff0055; 
             text-align: left;
-            animation: fadeIn 0.5s ease-out forwards;
-        }
-        .stats strong {
-            display: block;
-            color: #fff;
-            margin-bottom: 15px;
-            font-size: 18px;
-            border-bottom: 1px solid rgba(255, 0, 85, 0.3);
-            padding-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
         }
         .stat-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
-            font-size: 15px;
+            margin-bottom: 8px;
+            font-size: 14px;
         }
         .stat-label { color: #94a3b8; }
-        .stat-value { font-family: monospace; color: #e2e8f0; font-size: 16px;}
+        .stat-value { font-family: monospace; color: #e2e8f0; }
         .highlight { 
             color: #ff0055; 
             font-weight: bold; 
-            font-size: clamp(20px, 4vw, 24px);
-            text-shadow: 0 0 15px rgba(255, 0, 85, 0.5);
+            font-size: 18px;
+        }
+        .success-box {
+            margin-top: 15px;
+            background: rgba(0, 255, 100, 0.1);
+            border: 1px solid #00ff64;
+            padding: 12px;
+            color: #00ff64;
+            font-family: monospace;
+            font-size: 13px;
+            text-align: left;
         }
         .download-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-top: 25px;
+            display: block;
+            margin-top: 12px;
             background: transparent;
             color: #ff0055;
             text-decoration: none;
-            padding: 15px;
+            padding: 10px;
             font-weight: 600;
             border: 1px solid #ff0055;
+            text-align: center;
             transition: all 0.2s;
             text-transform: uppercase;
             letter-spacing: 1px;
+            font-size: 13px;
         }
         .download-btn:hover {
             background: #ff0055;
             color: #fff;
-            box-shadow: 0 0 15px rgba(255, 0, 85, 0.4);
+            box-shadow: 0 0 12px rgba(255, 0, 85, 0.4);
+        }
+        .error-box {
+            margin-top: 15px; 
+            color: #ff3333; 
+            font-family: monospace; 
+            background: rgba(255,0,0,0.1); 
+            padding: 10px; 
+            border: 1px solid #ff3333; 
+            text-align: left; 
+            font-size: 13px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Huffman Engine</h2>
-        <p class="subtitle">Lossless C-Core Text Compression</p>
+        <p class="subtitle">Lossless C-Core Text Compression & Decompression</p>
         
-        <form action="/" method="POST" enctype="multipart/form-data">
-            <div class="upload-area" id="drop-zone">
-                <label for="file-upload" class="upload-label">
-                    Select Target File
-                </label>
-                <input id="file-upload" type="file" name="file" accept=".txt" required onchange="showFileName(this)">
-                <div class="filename-display" id="filename">Awaiting file input...</div>
+        <!-- COMPRESSION PANEL -->
+        <div class="engine-panel">
+            <h3>1. Compression Pipeline</h3>
+            <form action="/compress" method="POST" enctype="multipart/form-data">
+                <label for="file-upload-comp" class="upload-label">Select Text File (.txt)</label>
+                <input id="file-upload-comp" type="file" name="file" accept=".txt" required onchange="showFileName(this, 'filename-comp', 'btn-comp')">
+                <div class="filename-display" id="filename-comp">Awaiting file input...</div>
+                <button type="submit" id="btn-comp">Execute Compression</button>
+            </form>
+
+            {% if comp_stats %}
+            <div class="stats">
+                <div class="stat-row"><span class="stat-label">Original Payload:</span><span class="stat-value">{{ comp_stats.original }} bytes</span></div>
+                <div class="stat-row"><span class="stat-label">Compressed Package:</span><span class="stat-value">{{ comp_stats.compressed }} bytes</span></div>
+                <div class="stat-row" style="margin-top: 10px;"><span class="stat-label" style="color: #fff; font-weight: bold;">Space Reclaimed:</span><span class="stat-value highlight">{{ comp_stats.ratio }}%</span></div>
+                <a href="/download/output.bin" class="download-btn">Download .bin Package</a>
             </div>
-            <button type="submit" id="compress-btn">Execute Compression</button>
-        </form>
+            {% endif %}
+        </div>
+
+        <!-- DECOMPRESSION PANEL -->
+        <div class="engine-panel">
+            <h3>2. Decompression Pipeline</h3>
+            <form action="/decompress" method="POST" enctype="multipart/form-data">
+                <label for="file-upload-decomp" class="upload-label">Select Binary Package (.bin)</label>
+                <input id="file-upload-decomp" type="file" name="file" accept=".bin" required onchange="showFileName(this, 'filename-decomp', 'btn-decomp')">
+                <div class="filename-display" id="filename-decomp">Awaiting file input...</div>
+                <button type="submit" id="btn-decomp">Execute Decompression</button>
+            </form>
+
+            {% if decomp_success %}
+            <div class="success-box">
+                Status: <strong>Successfully Restored!</strong><br>
+                <a href="/download/restored_text.txt" class="download-btn" style="color: #00ff64; border-color: #00ff64;">Download Restored .txt File</a>
+            </div>
+            {% endif %}
+        </div>
 
         {% if error %}
-        <div style="margin-top: 20px; color: #ff3333; font-family: monospace; background: rgba(255,0,0,0.1); padding: 10px; border: 1px solid #ff3333; text-align: left; font-size: 13px;">
+        <div class="error-box">
             <strong>C-CORE ERROR:</strong><br>{{ error }}
-        </div>
-        {% endif %}
-
-        {% if stats %}
-        <div class="stats">
-            <strong>Diagnostic Results</strong>
-            <div class="stat-row">
-                <span class="stat-label">Original Payload:</span>
-                <span class="stat-value">{{ stats.original }} bytes</span>
-            </div>
-            <div class="stat-row">
-                <span class="stat-label">Compressed Package:</span>
-                <span class="stat-value">{{ stats.compressed }} bytes</span>
-            </div>
-            <div class="stat-row highlight-row" style="margin-top: 20px;">
-                <span class="stat-label" style="color: #fff; font-weight: bold;">Space Reclaimed:</span>
-                <span class="stat-value highlight">{{ stats.ratio }}%</span>
-            </div>
-            
-            <a href="/download" class="download-btn">
-                Download .bin Package
-            </a>
         </div>
         {% endif %}
     </div>
 
     <script>
-        function showFileName(input) {
-            const display = document.getElementById('filename');
-            const btn = document.getElementById('compress-btn');
+        function showFileName(input, displayId, btnId) {
+            const display = document.getElementById(displayId);
             if (input.files[0]) {
                 display.style.color = '#ff0055';
                 display.innerText = "> " + input.files[0].name + " loaded.";
-                btn.style.opacity = '1';
-                btn.disabled = false;
             } else {
                 display.style.color = '#cbd5e1';
                 display.innerText = "Awaiting file input...";
@@ -255,76 +261,108 @@ HTML_TEMPLATE = """
 </html>
 """
 
-@app.route('/', methods=['GET', 'POST'])
+def get_backend_executable():
+    if platform.system() == "Windows":
+        return "./huffman_backend.exe"
+    else:
+        backend = "./huffman_backend"
+        os.system(f"chmod +x {backend}")
+        return backend
+
+@app.route('/')
 def index():
-    stats = None
+    return render_template_string(HTML_TEMPLATE, comp_stats=None, decomp_success=False, error=None)
+
+@app.route('/compress', methods=['POST'])
+def compress():
     error = None
-    if request.method == 'POST':
+    stats = None
+    input_path = "temp_input.txt"
+    output_path = "output.bin"
+    
+    try:
         if 'file' not in request.files:
-            return render_template_string(HTML_TEMPLATE, stats=None, error="No file part provided.")
+            return render_template_string(HTML_TEMPLATE, comp_stats=None, decomp_success=False, error="No file part provided.")
         file = request.files['file']
         if file.filename == '':
-            return render_template_string(HTML_TEMPLATE, stats=None, error="No selected file.")
+            return render_template_string(HTML_TEMPLATE, comp_stats=None, decomp_success=False, error="No selected file.")
         
-        input_path = "temp_input.txt"
-        output_path = "output.bin"
+        file.save(input_path)
+        backend = get_backend_executable()
+
+        subprocess.run(
+            [backend, "compress", input_path, output_path],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+
+        original_size = os.path.getsize(input_path)
+        compressed_size = os.path.getsize(output_path)
+
+        ratio = round(((original_size - compressed_size) / original_size) * 100, 2) if original_size > 0 else 0.0
+
+        stats = {
+            "original": original_size,
+            "compressed": compressed_size,
+            "ratio": ratio
+        }
+
+    except subprocess.CalledProcessError as e:
+        error = f"Exit code {e.returncode}\nStdout: {e.stdout}\nStderr: {e.stderr}"
+    except Exception as e:
+        error = str(e)
+    finally:
+        if os.path.exists(input_path):
+            try: os.remove(input_path)
+            except: pass
+
+    return render_template_string(HTML_TEMPLATE, comp_stats=stats, decomp_success=False, error=error)
+
+@app.route('/decompress', methods=['POST'])
+def decompress():
+    error = None
+    decomp_success = False
+    input_path = "temp_compressed.bin"
+    output_path = "restored_text.txt"
+    
+    try:
+        if 'file' not in request.files:
+            return render_template_string(HTML_TEMPLATE, comp_stats=None, decomp_success=False, error="No file part provided.")
+        file = request.files['file']
+        if file.filename == '':
+            return render_template_string(HTML_TEMPLATE, comp_stats=None, decomp_success=False, error="No selected file.")
         
-        try:
-            # Save uploaded file temporarily
-            file.save(input_path)
-            
-            # Select backend binary based on server environment
-            if platform.system() == "Windows":
-                backend_executable = "./huffman_backend.exe"
-            else:
-                backend_executable = "./huffman_backend"
-                # Ensure execution permission on Linux/Render
-                os.system(f"chmod +x {backend_executable}")
+        file.save(input_path)
+        backend = get_backend_executable()
 
-            # Execute the C-Core binary via subprocess
-            result = subprocess.run(
-                [backend_executable, "compress", input_path, output_path],
-                capture_output=True,
-                text=True,
-                check=True
-            )
+        subprocess.run(
+            [backend, "decompress", input_path, output_path],
+            capture_output=True,
+            text=True,
+            check=True
+        )
 
-            # Measure true physical files on disk
-            original_size = os.path.getsize(input_path)
-            compressed_size = os.path.getsize(output_path)
+        decomp_success = True
 
-            # Calculate accurate space reclaimed ratio
-            if original_size > 0:
-                ratio = round(((original_size - compressed_size) / original_size) * 100, 2)
-            else:
-                ratio = 0.0
+    except subprocess.CalledProcessError as e:
+        error = f"Exit code {e.returncode}\nStdout: {e.stdout}\nStderr: {e.stderr}"
+    except Exception as e:
+        error = str(e)
+    finally:
+        if os.path.exists(input_path):
+            try: os.remove(input_path)
+            except: pass
 
-            stats = {
-                "original": original_size,
-                "compressed": compressed_size,
-                "ratio": ratio
-            }
+    return render_template_string(HTML_TEMPLATE, comp_stats=None, decomp_success=decomp_success, error=error)
 
-        except subprocess.CalledProcessError as e:
-            error = f"Exit code {e.returncode}\nStdout: {e.stdout}\nStderr: {e.stderr}"
-        except Exception as e:
-            error = str(e)
-        finally:
-            # Clean up the temporary input text file
-            if os.path.exists(input_path):
-                try:
-                    os.remove(input_path)
-                except:
-                    pass
-
-    return render_template_string(HTML_TEMPLATE, stats=stats, error=error)
-
-@app.route('/download')
-def download():
-    output_path = "output.bin"
-    if os.path.exists(output_path):
-        return send_file(output_path, as_attachment=True, download_name="compressed_package.bin")
-    return "No compressed package found.", 404
+@app.route('/download/<filename>')
+def download(filename):
+    # Sanitize filename to prevent directory traversal
+    safe_filename = os.path.basename(filename)
+    if os.path.exists(safe_filename):
+        return send_file(safe_filename, as_attachment=True)
+    return "Requested package not found.", 404
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
