@@ -3,6 +3,7 @@
 #include <string.h>
 
 #define MAX_TREE_HT 256
+#define CHUNK_SIZE 4096 // 4KB Stream Buffer for large file handling
 
 /* --- Data Structures --- */
 struct MinHeapNode {
@@ -135,17 +136,23 @@ void storeCodes(struct MinHeapNode* root, int arr[], int top) {
     }
 }
 
-/* --- Compress Function --- */
+/* --- Compress Function (Encryption) --- */
 void compressFile(const char *inputFile, const char *outputFile) {
-    FILE *in = fopen(inputFile, "r");
+    FILE *in = fopen(inputFile, "rb");
     if (!in) { printf("Error opening input file.\n"); return; }
 
     int freq[256] = {0};
-    char ch;
     int total_chars = 0;
-    while (fread(&ch, 1, 1, in)) {
-        freq[(unsigned char)ch]++;
-        total_chars++;
+    
+    unsigned char buffer_chunk[CHUNK_SIZE];
+    size_t bytes_read;
+
+    // First Pass: Read file in 4KB chunks to calculate frequency
+    while ((bytes_read = fread(buffer_chunk, 1, CHUNK_SIZE, in)) > 0) {
+        for (size_t i = 0; i < bytes_read; i++) {
+            freq[buffer_chunk[i]]++;
+            total_chars++;
+        }
     }
 
     int unique_chars = 0;
@@ -171,51 +178,135 @@ void compressFile(const char *inputFile, const char *outputFile) {
     storeCodes(root, arr, top);
 
     FILE *out = fopen(outputFile, "wb");
+    if (!out) { printf("Error opening output file.\n"); fclose(in); return; }
     
+    // Write DedSec Header for UI rendering
+    const char *header = "DEDSEC_ENCRYPTED_PACKAGE\n";
+    fwrite(header, 1, strlen(header), out);
+
     fwrite(&unique_chars, sizeof(int), 1, out);
     for (int i = 0; i < unique_chars; i++) {
         fwrite(&dataArr[i], sizeof(char), 1, out);
         fwrite(&freqArr[i], sizeof(int), 1, out);
     }
 
+    // Rewind input file for the second pass
     fseek(in, 0, SEEK_SET);
     
-    unsigned char buffer = 0;
+    unsigned char bit_container = 0;
     int bits_filled = 0;
     
-    while (fread(&ch, 1, 1, in)) {
-        char *strCode = codes[(unsigned char)ch];
-        for (int i = 0; strCode[i] != '\0'; i++) {
-            if (strCode[i] == '1') {
-                buffer |= (1 << (7 - bits_filled));
-            }
-            bits_filled++;
-            if (bits_filled == 8) {
-                fwrite(&buffer, 1, 1, out);
-                buffer = 0;
-                bits_filled = 0;
+    // Second Pass: Read file in 4KB chunks to encode and bit-pack
+    while ((bytes_read = fread(buffer_chunk, 1, CHUNK_SIZE, in)) > 0) {
+        for (size_t k = 0; k < bytes_read; k++) {
+            unsigned char current_character = buffer_chunk[k];
+            char *strCode = codes[current_character];
+            
+            for (int i = 0; strCode[i] != '\0'; i++) {
+                bit_container = bit_container << 1; 
+                if (strCode[i] == '1') {
+                    bit_container = bit_container | 1;
+                }
+                bits_filled++;
+                
+                // Flush to disk immediately when a byte is full
+                if (bits_filled == 8) {
+                    fwrite(&bit_container, 1, 1, out);
+                    bit_container = 0;
+                    bits_filled = 0;
+                }
             }
         }
     }
+    
+    // Flush remaining bits
     if (bits_filled > 0) {
-        fwrite(&buffer, 1, 1, out);
+        bit_container = bit_container << (8 - bits_filled);
+        fwrite(&bit_container, 1, 1, out);
     }
 
-    printf("SUCCESS! Compression completed.\n");
+    printf("DedSec Engine: Target successfully compressed and streamed to disk.\n");
     fclose(in);
     fclose(out);
     free(dataArr);
     free(freqArr);
 }
 
+/* --- Decompress Function (Decryption) --- */
+void decompressFile(const char *inputFile, const char *outputFile) {
+    FILE *in = fopen(inputFile, "rb");
+    if (!in) { printf("Error opening compressed file.\n"); return; }
+
+    FILE *out = fopen(outputFile, "wb");
+    if (!out) { printf("Error opening output file.\n"); fclose(in); return; }
+
+    // Read and verify the DedSec Header
+    char expected_header[] = "DEDSEC_ENCRYPTED_PACKAGE\n";
+    char read_header[30] = {0};
+    fread(read_header, 1, strlen(expected_header), in);
+    
+    if (strcmp(read_header, expected_header) != 0) {
+        printf("CRITICAL ERROR: Not a valid DedSec Encrypted Package.\n");
+        fclose(in); fclose(out); return;
+    }
+
+    // Read the frequency dictionary
+    int unique_chars;
+    fread(&unique_chars, sizeof(int), 1, in);
+
+    char *dataArr = (char*)malloc(unique_chars * sizeof(char));
+    int *freqArr = (int*)malloc(unique_chars * sizeof(int));
+    int total_chars = 0;
+
+    for (int i = 0; i < unique_chars; i++) {
+        fread(&dataArr[i], sizeof(char), 1, in);
+        fread(&freqArr[i], sizeof(int), 1, in);
+        total_chars += freqArr[i]; 
+    }
+
+    // Rebuild the Huffman Tree
+    struct MinHeapNode* root = buildHuffmanTree(dataArr, freqArr, unique_chars);
+    struct MinHeapNode* current = root;
+
+    unsigned char bit_container;
+    int decoded_chars = 0;
+
+    // Decode the binary data
+    while (fread(&bit_container, 1, 1, in) > 0 && decoded_chars < total_chars) {
+        for (int i = 7; i >= 0; i--) {
+            int bit = (bit_container >> i) & 1;
+
+            if (bit == 0) current = current->left;
+            else current = current->right;
+
+            if (isLeaf(current)) {
+                fwrite(&(current->data), 1, 1, out);
+                decoded_chars++;
+                current = root; 
+
+                if (decoded_chars == total_chars) break; 
+            }
+        }
+    }
+
+    printf("DedSec Engine: File successfully decrypted and restored.\n");
+    fclose(in);
+    fclose(out);
+    free(dataArr);
+    free(freqArr);
+}
+
+/* --- Main Engine Controller --- */
 int main(int argc, char *argv[]) {
     if (argc < 4) {
-        printf("Usage: %s compress <input_file> <output_file>\n", argv[0]);
+        printf("Usage: %s <compress/decompress> <input_file> <output_file>\n", argv[0]);
         return 1;
     }
 
     if (strcmp(argv[1], "compress") == 0) {
         compressFile(argv[2], argv[3]);
+    } else if (strcmp(argv[1], "decompress") == 0) {
+        decompressFile(argv[2], argv[3]);
     } else {
         printf("Invalid command.\n");
     }
