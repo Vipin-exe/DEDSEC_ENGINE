@@ -3,9 +3,8 @@
 #include <string.h>
 
 #define MAX_TREE_HT 256
-#define CHUNK_SIZE 4096 // 4KB Stream Buffer for large file handling
+#define CHUNK_SIZE 4096 
 
-/* --- Data Structures --- */
 struct MinHeapNode {
     char data;
     unsigned freq;
@@ -18,7 +17,6 @@ struct MinHeap {
     struct MinHeapNode **array;
 };
 
-/* --- Node & Heap Utility Functions --- */
 struct MinHeapNode* newNode(char data, unsigned freq) {
     struct MinHeapNode* temp = (struct MinHeapNode*)malloc(sizeof(struct MinHeapNode));
     temp->left = temp->right = NULL;
@@ -99,7 +97,6 @@ struct MinHeap* createAndBuildMinHeap(char data[], int freq[], int size) {
     return minHeap;
 }
 
-/* --- Tree Construction --- */
 struct MinHeapNode* buildHuffmanTree(char data[], int freq[], int size) {
     struct MinHeapNode *left, *right, *top;
     struct MinHeap* minHeap = createAndBuildMinHeap(data, freq, size);
@@ -115,7 +112,6 @@ struct MinHeapNode* buildHuffmanTree(char data[], int freq[], int size) {
     return extractMin(minHeap);
 }
 
-/* --- Store Codes in Dictionary --- */
 char codes[256][MAX_TREE_HT];
 
 void storeCodes(struct MinHeapNode* root, int arr[], int top) {
@@ -136,22 +132,17 @@ void storeCodes(struct MinHeapNode* root, int arr[], int top) {
     }
 }
 
-/* --- Compress Function (Encryption) --- */
 void compressFile(const char *inputFile, const char *outputFile) {
     FILE *in = fopen(inputFile, "rb");
     if (!in) { printf("Error opening input file.\n"); return; }
 
     int freq[256] = {0};
-    int total_chars = 0;
-    
     unsigned char buffer_chunk[CHUNK_SIZE];
     size_t bytes_read;
 
-    // First Pass: Read file in 4KB chunks to calculate frequency
     while ((bytes_read = fread(buffer_chunk, 1, CHUNK_SIZE, in)) > 0) {
         for (size_t i = 0; i < bytes_read; i++) {
             freq[buffer_chunk[i]]++;
-            total_chars++;
         }
     }
 
@@ -180,7 +171,6 @@ void compressFile(const char *inputFile, const char *outputFile) {
     FILE *out = fopen(outputFile, "wb");
     if (!out) { printf("Error opening output file.\n"); fclose(in); return; }
     
-    // Write DedSec Header for UI rendering
     const char *header = "DEDSEC_ENCRYPTED_PACKAGE\n";
     fwrite(header, 1, strlen(header), out);
 
@@ -190,26 +180,20 @@ void compressFile(const char *inputFile, const char *outputFile) {
         fwrite(&freqArr[i], sizeof(int), 1, out);
     }
 
-    // Rewind input file for the second pass
     fseek(in, 0, SEEK_SET);
     
     unsigned char bit_container = 0;
     int bits_filled = 0;
     
-    // Second Pass: Read file in 4KB chunks to encode and bit-pack
     while ((bytes_read = fread(buffer_chunk, 1, CHUNK_SIZE, in)) > 0) {
         for (size_t k = 0; k < bytes_read; k++) {
             unsigned char current_character = buffer_chunk[k];
             char *strCode = codes[current_character];
             
             for (int i = 0; strCode[i] != '\0'; i++) {
-                bit_container = bit_container << 1; 
-                if (strCode[i] == '1') {
-                    bit_container = bit_container | 1;
-                }
+                bit_container = (bit_container << 1) | (strCode[i] == '1' ? 1 : 0);
                 bits_filled++;
                 
-                // Flush to disk immediately when a byte is full
                 if (bits_filled == 8) {
                     fwrite(&bit_container, 1, 1, out);
                     bit_container = 0;
@@ -219,20 +203,17 @@ void compressFile(const char *inputFile, const char *outputFile) {
         }
     }
     
-    // Flush remaining bits
     if (bits_filled > 0) {
         bit_container = bit_container << (8 - bits_filled);
         fwrite(&bit_container, 1, 1, out);
     }
 
-    printf("DedSec Engine: Target successfully compressed and streamed to disk.\n");
     fclose(in);
     fclose(out);
     free(dataArr);
     free(freqArr);
 }
 
-/* --- Decompress Function (Decryption) --- */
 void decompressFile(const char *inputFile, const char *outputFile) {
     FILE *in = fopen(inputFile, "rb");
     if (!in) { printf("Error opening compressed file.\n"); return; }
@@ -240,17 +221,14 @@ void decompressFile(const char *inputFile, const char *outputFile) {
     FILE *out = fopen(outputFile, "wb");
     if (!out) { printf("Error opening output file.\n"); fclose(in); return; }
 
-    // Read and verify the DedSec Header
     char expected_header[] = "DEDSEC_ENCRYPTED_PACKAGE\n";
     char read_header[30] = {0};
     fread(read_header, 1, strlen(expected_header), in);
     
     if (strcmp(read_header, expected_header) != 0) {
-        printf("CRITICAL ERROR: Not a valid DedSec Encrypted Package.\n");
         fclose(in); fclose(out); return;
     }
 
-    // Read the frequency dictionary
     int unique_chars;
     fread(&unique_chars, sizeof(int), 1, in);
 
@@ -264,14 +242,12 @@ void decompressFile(const char *inputFile, const char *outputFile) {
         total_chars += freqArr[i]; 
     }
 
-    // Rebuild the Huffman Tree
     struct MinHeapNode* root = buildHuffmanTree(dataArr, freqArr, unique_chars);
     struct MinHeapNode* current = root;
 
     unsigned char bit_container;
     int decoded_chars = 0;
 
-    // Decode the binary data
     while (fread(&bit_container, 1, 1, in) > 0 && decoded_chars < total_chars) {
         for (int i = 7; i >= 0; i--) {
             int bit = (bit_container >> i) & 1;
@@ -289,27 +265,19 @@ void decompressFile(const char *inputFile, const char *outputFile) {
         }
     }
 
-    printf("DedSec Engine: File successfully decrypted and restored.\n");
     fclose(in);
     fclose(out);
     free(dataArr);
     free(freqArr);
 }
 
-/* --- Main Engine Controller --- */
 int main(int argc, char *argv[]) {
-    if (argc < 4) {
-        printf("Usage: %s <compress/decompress> <input_file> <output_file>\n", argv[0]);
-        return 1;
-    }
+    if (argc < 4) return 1;
 
     if (strcmp(argv[1], "compress") == 0) {
         compressFile(argv[2], argv[3]);
     } else if (strcmp(argv[1], "decompress") == 0) {
         decompressFile(argv[2], argv[3]);
-    } else {
-        printf("Invalid command.\n");
     }
-
     return 0;
 }
